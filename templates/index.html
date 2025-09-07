@@ -1,0 +1,15 @@
+<html>
+<head>
+	<title>FLashcard</title>
+</head>
+<body>
+<h1>FlashCard App</h1>
+
+
+{% for card in cards %}
+	<div>
+		<b>{{card.question}}</b> <br>{{card.answer}}
+	</div>
+{% endfor %}
+</body>
+</html>
