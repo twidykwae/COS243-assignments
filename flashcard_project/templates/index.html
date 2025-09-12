@@ -1,6 +1,8 @@
 <html>
 <head>
-	<title>FLashcard</title>
+	<title>Flashcard</title>
+	<link rel="stylesheet" href="{{ url_for('static', path='/css/styles.css') }}">
+	<script src="{{ url_for('static', path='/js/scripts.js') }}"></script>
 </head>
 <body>
 <h1>FlashCard App</h1>
@@ -8,8 +10,11 @@
 
 {% for card in cards %}
 	<div>
-		<b>{{card.question}}</b> <br>{{card.answer}}
+		<a href="{{url_for('get_card', card_id=card.id)}}">{{card.question}}</a>
 	</div>
+	
 {% endfor %}
+
+
 </body>
 </html>

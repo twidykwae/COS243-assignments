@@ -1,25 +1,51 @@
+from urllib import request
 from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 import random
+
 
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 class Card(BaseModel):
     id: int
     question: str
     answer: str
+    wrong_attempts: int = 0
+    set_ID: int
+
+class User(BaseModel):
+    id: int
+    name: str
+    email: str
+    sets: list[int] = []
+
+class Set(BaseModel):
+    id: int
+    name: str
 
 
-cards = [Card(id = 1, question="Where is Taylor located?", answer="Upland"),
-         Card(id=2, question="What is the largest planet in our solar system?", answer="Jupiter"),
-         Card(id=3, question="Who wrote the play 'Romeo and Juliet'?", answer="William Shakespeare"),
-         Card(id=4, question="What is the capital city of Japan?", answer="Tokyo"),
-         Card(id=5, question="When did Ghana gain independence?", answer="6th March, 1957"),
+
+user_list = [User(id=1, name="Twidy", email="twidy@gmail.com", sets=[1]),
+             User(id=2, name="Jake", email="jake@gmail.com", sets=[2]),
+             ]
+
+
+set_list = [Set(id=1, name="Geography"),
+            Set(id=2, name="History")
+            ]
+
+cards = [Card(id = 1, question="Where is Taylor located?", answer="Upland", set_ID=1),
+         Card(id=2, question="What is the largest planet in our solar system?", answer="Jupiter", set_ID=1),
+         Card(id=3, question="Who wrote the play 'Romeo and Juliet'?", answer="William Shakespeare", set_ID=2),
+         Card(id=4, question="What is the capital city of Japan?", answer="Tokyo", set_ID=2),
+         Card(id=5, question="When did Ghana gain independence?", answer="6th March, 1957", set_ID=2),
          ]
 
 
@@ -40,7 +66,27 @@ async def play(request: Request):
 
 
 
+@app.get("/cards/{card_id}", name="get_card", response_class=HTMLResponse)
+async def get_card_by_id(card_id: int, request: Request):
+    for card in cards:
+        if card.id == card_id:
+            return templates.TemplateResponse(
+                request = request,
+                name="card.html", context={"card": card}
+            )
 
+@app.get("/sets", response_class=HTMLResponse)
+async def get_set(request: Request):
+    return templates.TemplateResponse(
+        request = request,
+        name="sets.html", 
+        context={"sets": set_list}
+    )
 
-
-
+@app.get("/users", response_class=HTMLResponse)
+async def get_users(request: Request):
+    return templates.TemplateResponse(
+        request = request,
+        name="users.html", 
+        context={"users": user_list}
+    )
