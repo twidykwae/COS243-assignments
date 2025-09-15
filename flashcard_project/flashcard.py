@@ -5,20 +5,29 @@ from fastapi import Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from contextlib import asynccontextmanager
+from db.session import create_db_and_tables, get_session, SessionDep
+from sqlmodel import Field, SQLModel, Relationship, select
 import random
 
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    create_db_and_tables()
+    yield
 
-app = FastAPI()
+
+app = FastAPI(lifespan=lifespan)
+
 templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-class Card(BaseModel):
-    id: int
-    question: str
-    answer: str
-    wrong_attempts: int = 0
-    set_ID: int
+class Card(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    front: str
+    back: str
+    set_ID: int = Field(foreign_key="set.id")
+    set: "Set" = Relationship(back_populates="cards")
 
 class User(BaseModel):
     id: int
@@ -26,9 +35,10 @@ class User(BaseModel):
     email: str
     sets: list[int] = []
 
-class Set(BaseModel):
-    id: int
+class Set(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
     name: str
+    cards: list["Card"] = Relationship(back_populates="set")
 
 
 
