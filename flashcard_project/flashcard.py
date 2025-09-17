@@ -20,7 +20,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 templates = Jinja2Templates(directory="templates")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.mount("/static/css", StaticFiles(directory="static"), name="static")
 
 class Card(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
@@ -47,51 +48,56 @@ user_list = [User(id=1, name="Twidy", email="twidy@gmail.com", sets=[1]),
              ]
 
 
-set_list = [Set(id=1, name="Geography"),
-            Set(id=2, name="History")
-            ]
-
-cards = [Card(id = 1, question="Where is Taylor located?", answer="Upland", set_ID=1),
-         Card(id=2, question="What is the largest planet in our solar system?", answer="Jupiter", set_ID=1),
-         Card(id=3, question="Who wrote the play 'Romeo and Juliet'?", answer="William Shakespeare", set_ID=2),
-         Card(id=4, question="What is the capital city of Japan?", answer="Tokyo", set_ID=2),
-         Card(id=5, question="When did Ghana gain independence?", answer="6th March, 1957", set_ID=2),
-         ]
-
-
-
 @app.get("/", response_class=HTMLResponse)
-async def read_root(request:Request):
+async def read_root(request:Request, session: SessionDep):
+    cards = session.exec(select(Card)).all()
     return templates.TemplateResponse(
         request=request, name="index.html", context={"cards": cards}
     )
 
 
 @app.get("/play", response_class=HTMLResponse)
-async def play(request: Request):
-    card = cards[random.randint(0, (len(cards)-1))]
+async def play(request: Request, session: SessionDep):
+    cards = session.exec(select(Card)).all()
+    random_card = random.choice(cards) if cards else None
     return templates.TemplateResponse(
-        request = request, name="play.html", context={"card": card}
+        request=request, name="play.html", context={"card": random_card}
     )
 
 
+@app.get("/cards", response_class=HTMLResponse)
+async def get_cards(request: Request, session: SessionDep):
+    cards = session.exec(select(Card)).all()
+    return templates.TemplateResponse(
+        request=request, name="cards.html", context={"cards": cards}
+    )
 
 @app.get("/cards/{card_id}", name="get_card", response_class=HTMLResponse)
-async def get_card_by_id(card_id: int, request: Request):
-    for card in cards:
-        if card.id == card_id:
-            return templates.TemplateResponse(
-                request = request,
-                name="card.html", context={"card": card}
+async def get_card_by_id(card_id: int, request: Request, session: SessionDep):
+    card = session.exec(select(Card).where(Card.id == card_id)).first()
+    if card:
+        return templates.TemplateResponse(
+            request=request,
+            name="card.html", context={"card": card}
             )
 
 @app.get("/sets", response_class=HTMLResponse)
-async def get_set(request: Request):
+async def get_set(request: Request, session: SessionDep):
+    sets = session.exec(select(Set).order_by(Set.name)).all()
     return templates.TemplateResponse(
-        request = request,
-        name="sets.html", 
-        context={"sets": set_list}
+        request=request, name="sets.html", context={"sets":sets}
     )
+
+
+@app.get("/sets/{set_id}", name="get_set", response_class=HTMLResponse)
+async def get_set_by_id(set_id: int, request: Request, session: SessionDep):
+    set = session.exec(select(Set).where(Set.id == set_id)).first()
+    if set:
+        return templates.TemplateResponse(
+            request=request,
+            name="set_detail.html",
+            context={"set": set, "cards": set.cards}
+            )
 
 @app.get("/users", response_class=HTMLResponse)
 async def get_users(request: Request):
@@ -100,3 +106,22 @@ async def get_users(request: Request):
         name="users.html", 
         context={"users": user_list}
     )
+
+
+@app.post("/sets/add")
+async def create_set(session: SessionDep, set:Set):
+    db_set = Set(name=set.name)
+    session.add(db_set)
+    session.commit()
+    session.refresh(db_set)
+    return db_set
+
+
+@app.post("/cards/add")
+async def create_card(session: SessionDep, card:Card):
+    db_card = Card(front=card.front, back=card.back, set_ID=card.set_ID)
+    session.add(db_card)
+    session.commit()
+    session.refresh(db_card)
+    return db_card
+

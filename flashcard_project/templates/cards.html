@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}All Cards{% endblock %}
+
+{% block content %}
+<h1>All Flashcards</h1>
+    
+<div>
+    {% import "macros/card.html" as card_macro %}
+
+    {% for card in cards %}
+        {{ card_macro.card(card) }}
+    {% endfor %}
+</div>
+{% endblock %}

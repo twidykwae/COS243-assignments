@@ -1,13 +1,11 @@
-<html>
-<head>
-	<title>Play Game</title>
-</head>
-<body>
-	<h1>PLAY</h1>
+{% extends "base.html" %}
 
-	<div>
-	<b>{{ card.question }}</b><br>
-	{{ card.answer }}
-	</div>
-</body>
-</html>
+{% block title %}Play{% endblock %}
+
+{% block content %}
+    <h1>Play Random Card</h1>
+        <div class="flashcard">
+            <div class="cardFront">{{ card.front }}</div>
+            <div class="cardBack">{{ card.back }}</div>
+        </div>
+{% endblock %}

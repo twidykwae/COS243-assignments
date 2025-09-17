@@ -1,16 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sets</title>
-</head>
-<body>
-    <h1>Sets</h1>
+{% extends "base.html" %}
+{% block title %}Sets{% endblock %}
+{% block content %}
+    <h1>All Sets</h1>
     <ul>
         {% for set in sets %}
-            <li>{{ set.name }}</li>
+            <li>
+                <a href="/sets/{{ set.id }}">{{ set.name }}</a>
+            </li>
         {% endfor %}
     </ul>
-</body>
-</html>
+{% endblock %}

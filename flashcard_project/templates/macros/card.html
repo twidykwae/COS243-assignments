@@ -1,0 +1,6 @@
+{% macro card(card) %}
+<div class="flashcard" style="margin-bottom:24px; padding:16px; border:1px solid #ccc; border-radius:8px;">
+    <div class="cardFront" style="margin-bottom:8px; padding:8px;"><strong>Q:</strong> {{ card.front }}</div>
+    <div class="cardBack" style="padding:8px;"><strong>A:</strong> {{ card.back }}</div>
+</div>
+{% endmacro %}
