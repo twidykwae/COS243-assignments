@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Card {{ card.id }}{% endblock %}
+
+{% block content %}
+<h1>Card Details</h1>
+
+<p><strong>Front:</strong> {{ card.front }}</p>
+<p><strong>Back:</strong> {{ card.back }}</p>
+<p><strong>Set:</strong> {{ card.set.name if card.set else "No set" }}</p>
+
+<a href="/cards/{{ card.id }}/edit">Edit</a> |
+<a href="/cards">Back to all cards</a>
+{% endblock %}

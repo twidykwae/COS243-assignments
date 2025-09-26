@@ -2,6 +2,11 @@
 {% block title %}Sets{% endblock %}
 {% block content %}
     <h1>All Sets</h1>
+    <div style="margin-bottom: 1rem;">
+    <a href="/sets/add" class="btn btn-primary">
+        Add New Set
+    </a>
+    </div>
     <ul>
         {% for set in sets %}
             <li>

@@ -14,7 +14,6 @@ nav {
     background-color: #fff;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     position: fixed; 
-    top: 0;
     left: 0;
     z-index: 1000; 
 }
@@ -36,7 +35,7 @@ nav ul li a {
 }
 
 nav ul li a:hover {
-    color: #7f08e7;
+    color: rgb(155, 32, 222);
 }
 
 

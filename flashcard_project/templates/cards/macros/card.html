@@ -2,5 +2,13 @@
 <div class="flashcard" style="margin-bottom:24px; padding:16px; border:1px solid #ccc; border-radius:8px;">
     <div class="cardFront" style="margin-bottom:8px; padding:8px;"><strong>Q:</strong> {{ card.front }}</div>
     <div class="cardBack" style="padding:8px;"><strong>A:</strong> {{ card.back }}</div>
+    <a href="/cards/{{ card.id }}/edit">Edit</a>
+    
+    <form action="/cards/{{ card.id }}/delete" method="post" style="display:inline;">
+        <button type="submit" class="btn btn-sm btn-danger"
+                onclick="return confirm('Are you sure you want to delete this card?');">
+            Delete
+        </button>
+    </form>
 </div>
 {% endmacro %}
