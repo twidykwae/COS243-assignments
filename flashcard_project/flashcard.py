@@ -16,8 +16,11 @@ from .core.templates import templates
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_db_and_tables()
+    print("Creating database and tables...")
+    create_db_and_tables()   
+    print("Database ready ")
     yield
+    print("Shutting down app...")
 
 
 app = FastAPI(lifespan=lifespan)

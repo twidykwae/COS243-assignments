@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{{ url_for('static', path='css/styles.css') }}">
+    {% block css%}{% endblock %}
     <title>{% block title %}Flashcards{% endblock %}</title>
 </head>
 <body>
@@ -18,9 +19,12 @@
         </nav>
     </header>
 
-    {% block content %}{% endblock %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
 
     <footer>
+        <a href="https://github.com/twidykwae">GitHub</a>
         <p>© 2025 Flashcards App</p>
     </footer>
 </body>

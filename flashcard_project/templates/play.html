@@ -2,10 +2,21 @@
 
 {% block title %}Play{% endblock %}
 
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/play_style.css') }}">
+{% endblock %}
+
 {% block content %}
+
     <h1>Play Random Card</h1>
-        <div class="flashcard">
+    <div class="play-container">
+        <div class="flashcard" onclick="toggleCard(this)">
             <div class="cardFront">{{ card.front }}</div>
             <div class="cardBack">{{ card.back }}</div>
         </div>
+
+    <button class="next-btn" onclick="window.location.reload()">Next Question</button>
+    </div>
+
+    <script src="{{ url_for('static', path='scripts/play.js') }}"></script>
 {% endblock %}
