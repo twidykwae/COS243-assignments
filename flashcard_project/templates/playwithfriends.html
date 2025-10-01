@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Play With Friends{% endblock %}
+
+{% block content %}
+
+{% if not user_name %}
+    <h1>Play With Friends</h1>
+    <div class="playwithfriends-container">
+        <form method="post" action="/playwithfriends">
+            <label for="user_name">What is your game name: </label>
+            <input type="text" id="user_name" name="user_name" required>
+            <button type="submit">Start Game</button>
+        </form>
+    </div>
+{% else %}
+    <h1>Welcome, {{ user_name }}!</h1>
+{% endif %}
+
+{% endblock %}

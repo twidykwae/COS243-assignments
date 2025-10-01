@@ -41,3 +41,12 @@ async def get_set_by_id(set_id: int, request: Request, session: SessionDep):
             context={"set": set, "cards": set.cards}
             )
 
+
+@router.post("/{set_id}/delete")
+async def delete_set(set_id: int, session: Session = Depends(get_session)):
+    set = session.exec(select(Set).where(Set.id == set_id)).first()
+    if not set:
+        raise HTTPException(status_code=404, detail="Set not found")
+    session.delete(set)
+    session.commit()
+    return RedirectResponse(url="/sets", status_code=302)

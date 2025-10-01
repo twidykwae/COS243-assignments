@@ -7,7 +7,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from .db.session import create_db_and_tables, get_session, SessionDep
-from sqlmodel import Field, SQLModel, Relationship, select
+from sqlmodel import Field, SQLModel, Relationship, select, Session
+from fastapi import Depends, Form
 import random
 from .db.models import Card, Set, User
 from .routers import cards, sets
@@ -62,3 +63,23 @@ async def get_users(request: Request):
         context={"users": user_list}
     )
 
+@app.get("/playwithfriends", response_class=HTMLResponse)
+async def playwithfriendspage(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="playwithfriends.html",
+    )
+
+@app.post("/playwithfriends", response_class=HTMLResponse)
+async def playwithfriends_post(
+    request: Request,
+    session: Session = Depends(get_session),
+    user_name: str = Form(...)
+):
+    return templates.TemplateResponse(
+        request=request,
+        name="playwithfriends.html",
+        context={"users": user_list, "user_name": user_name}
+    )
+
+    

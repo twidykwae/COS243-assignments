@@ -1,0 +1,96 @@
+/* General page layout */
+h1 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 2rem;
+  color: #333;
+}
+
+/* Add new set button */
+.add-set-btn {
+  display: inline-block;
+  padding: 10px 16px;
+  background: #9b20de;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: bold;
+  transition: background 0.3s ease;
+  margin: 1rem;
+}
+.add-set-btn:hover {
+  background: #7a16b3;
+}
+
+
+/* Grid for all sets */
+.sets-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+  gap: 20px;
+  max-width: 1000px;
+}
+.sets-container li {
+  background: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  text-align: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column; /* stack items vertically */
+  gap: 12px;              /* space between name & button */
+}
+
+
+.sets-container a {
+  text-decoration: none;
+  color: #333;
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+.sets-container a:hover {
+  color: #9b20de;
+}
+
+/* Single set page */
+.set-detail-container {
+  max-width: 1000px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+.set-detail-container ul {
+  list-style: none;
+  padding: 0;
+  margin: 2rem auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 280px));
+  gap: 20px;
+}
+.set-detail-container li {
+  background: #fdfdfd;
+  border: 1px solid #eee;
+  padding: 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  text-align: center;
+  transition: transform 0.2s ease;
+}
+
+.delete-btn {
+  margin-left: 10px;
+  background: #e63946;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.2s ease;
+}
+.delete-btn:hover {
+  background: #c53030;
+}

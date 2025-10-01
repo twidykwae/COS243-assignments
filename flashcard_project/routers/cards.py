@@ -19,9 +19,10 @@ async def get_cards(request: Request, session: Session = Depends(get_session)):
 @router.get("/add", response_class=HTMLResponse)
 async def add_card_form(request: Request, session: Session = Depends(get_session)):
     sets = session.exec(select(Set)).all()
+    cards = session.exec(select(Card)).all()
     return templates.TemplateResponse(
         "cards/add_card.html",
-        {"request": request, "sets": sets}
+        {"request": request, "sets": sets, "card_count": len(cards)}
     )
 
 @router.post("/add", response_class=RedirectResponse)

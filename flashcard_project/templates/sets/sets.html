@@ -1,17 +1,27 @@
 {% extends "base.html" %}
 {% block title %}Sets{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/sets_style.css') }}">
+{% endblock %}
+
 {% block content %}
     <h1>All Sets</h1>
-    <div style="margin-bottom: 1rem;">
-    <a href="/sets/add" class="btn btn-primary">
+    <div>
+    <a href="/sets/add" class="add-set-btn">
         Add New Set
     </a>
     </div>
-    <ul>
-        {% for set in sets %}
-            <li>
-                <a href="/sets/{{ set.id }}">{{ set.name }}</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <div class="sets-container">
+        <ul>
+            {% for set in sets %}
+                <li>
+                    <a href="/sets/{{ set.id }}">{{ set.name }}</a>
+                    <form method="post" action="/sets/{{ set.id }}/delete">
+                        <button type="submit" class="delete-btn">Delete Set</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
 {% endblock %}

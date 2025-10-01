@@ -2,22 +2,30 @@
 
 {% block title %}All Cards{% endblock %}
 
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/cards_style.css') }}">
+{% endblock %}
+
 {% block content %}
 <h1>All Flashcards</h1>
 
+<p>Total Flashcards: {{ card_count }}</p>
 <!-- Add Card Button -->
-<div style="margin-bottom: 1rem;">
-    <a href="/cards/add" class="btn btn-primary">
+<div class="add-card-button">
+    <a href="/cards/add">
         Add New Card
     </a>
 </div>
 
-<div>
+<div class="cards-container">
+    <div class="card-grid">
     {% import "/cards/macros/card.html" as card_macro %}
 
     {% for card in cards %}
         {{ card_macro.card(card) }}
     {% else %}
+    </div>
         <p>No cards yet. <a href="{{ url_for('add_card_form') }}">Add one now</a>.</p>
     {% endfor %}
 </div>
