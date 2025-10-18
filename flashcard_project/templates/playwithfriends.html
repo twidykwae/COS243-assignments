@@ -1,19 +1,346 @@
 {% extends "base.html" %}
 {% block title %}Play With Friends{% endblock %}
-
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/pwf_styles.css') }}">
+{% endblock %}
 {% block content %}
 
-{% if not user_name %}
-    <h1>Play With Friends</h1>
-    <div class="playwithfriends-container">
-        <form method="post" action="/playwithfriends">
-            <label for="user_name">What is your game name: </label>
-            <input type="text" id="user_name" name="user_name" required>
-            <button type="submit">Start Game</button>
-        </form>
-    </div>
+<h1>🎯 Trivia Arena</h1>
+
+{% if not user_name or user_name is none %}
+<section id="login">
+  <form action="/playwithfriends" method="post">
+    <label for="user_name">Enter your name to join:</label>
+    <input type="text" id="user_name" name="user_name" placeholder="Your Name..." required maxlength="20"/>
+    <button>Join Game</button>
+    {% if error %}
+    <p style="color: red; margin-top: 0.5rem;">{{ error }}</p>
+    {% endif %}
+  </form>
+</section>
 {% else %}
-    <h1>Welcome, {{ user_name }}!</h1>
+
+<div class="container">
+  <!-- Ready Button - Top Left -->
+  <div class="ready-section">
+    <button id="ready-btn" class="ready-btn">I'm Ready!</button>
+  </div>
+
+  <!-- Sidebar - Top Right -->
+  <aside class="sidebar">
+    <section class="players">
+      <h3>👥 Players</h3>
+      <ul id="players-list" class="players-list"></ul>
+    </section>
+
+    <section class="scores">
+      <h3>🏆 Scores</h3>
+      <ul id="scores-list" class="scores-list"></ul>
+    </section>
+  </aside>
+
+  <!-- Main Chat/Game Area - Center -->
+  <main class="main-area">
+    <section id="lobby" class="lobby">
+      <div id="messages" class="messages" aria-live="polite"></div>
+
+      <form id="chat-form" class="chat-form">
+        <input id="chat-input" autocomplete="off" placeholder="Type a message..." maxlength="200"/>
+        <button type="submit">Send</button>
+      </form>
+    </section>
+
+    <section id="game-screen" class="game-screen hidden" aria-hidden="true">
+      <div class="question-card">
+        <div id="round-info" class="round-info"></div>
+        <h2 id="question-text" class="question-text">Question will appear here</h2>
+        <div id="options-container" class="options-container"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
 {% endif %}
+
+<script>
+/* ------------------ Helper Functions ------------------ */
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+}
+
+const username = getCookie("user_name");
+if (!username) {
+  console.warn("No user_name cookie found.");
+} else {
+  // WebSocket connection
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  const ws = new WebSocket(`${protocol}//${window.location.host}/ws/${encodeURIComponent(username)}`);
+
+  // DOM references
+  const messagesEl = document.getElementById("messages");
+  const playersListEl = document.getElementById("players-list");
+  const scoresListEl = document.getElementById("scores-list");
+  const readyBtn = document.getElementById("ready-btn");
+  const chatForm = document.getElementById("chat-form");
+  const chatInput = document.getElementById("chat-input");
+  const lobbySection = document.getElementById("lobby");
+  const gameScreen = document.getElementById("game-screen");
+  const questionText = document.getElementById("question-text");
+  const optionsContainer = document.getElementById("options-container");
+  const roundInfo = document.getElementById("round-info");
+
+  let isReady = false;
+  let currentlyAnswering = false;
+
+  /* ------------------ UI Update Functions ------------------ */
+  function logSystem(text) {
+    const el = document.createElement("div");
+    el.className = "system-line";
+    el.textContent = text;
+    messagesEl.appendChild(el);
+    scrollToBottom();
+  }
+
+  function addChatBubble(sender, text) {
+    const wrap = document.createElement("div");
+    wrap.className = (sender === username) ? "message-row self" : "message-row other";
+    
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.textContent = text;
+    
+    const meta = document.createElement("div");
+    meta.className = "message-meta";
+    meta.textContent = sender === username ? "You" : sender;
+    
+    wrap.appendChild(bubble);
+    wrap.appendChild(meta);
+    messagesEl.appendChild(wrap);
+    scrollToBottom();
+  }
+
+  function scrollToBottom() {
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+  }
+
+  function updatePlayers(players) {
+    playersListEl.innerHTML = "";
+    if (!players || players.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No players online";
+      li.style.opacity = "0.5";
+      playersListEl.appendChild(li);
+      return;
+    }
+    
+    players.forEach(p => {
+      const li = document.createElement("li");
+      li.textContent = p === username ? `${p} (You)` : p;
+      if (p === username) li.style.fontWeight = "600";
+      playersListEl.appendChild(li);
+    });
+  }
+
+  function updateScores(scores) {
+    scoresListEl.innerHTML = "";
+    if (!scores || scores.length === 0) {
+      const li = document.createElement("li");
+      li.textContent = "No scores yet";
+      li.style.opacity = "0.5";
+      scoresListEl.appendChild(li);
+      return;
+    }
+    
+    if (!Array.isArray(scores)) {
+      scores = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+    }
+    
+    scores.forEach(([name, val], index) => {
+      const li = document.createElement("li");
+      const medal = index === 0 ? "🥇 " : index === 1 ? "🥈 " : index === 2 ? "🥉 " : "";
+      li.innerHTML = `<span>${medal}${name}</span><span>${val}</span>`;
+      if (name === username) li.style.fontWeight = "700";
+      scoresListEl.appendChild(li);
+    });
+  }
+
+  function showQuestion(question, options, round, totalRounds) {
+    lobbySection.classList.add("hidden");
+    lobbySection.setAttribute("aria-hidden", "true");
+    gameScreen.classList.remove("hidden");
+    gameScreen.setAttribute("aria-hidden", "false");
+    
+    currentlyAnswering = false;
+    roundInfo.textContent = `Round ${round} of ${totalRounds}`;
+    questionText.textContent = question;
+    optionsContainer.innerHTML = "";
+    
+    options.forEach(opt => {
+      const btn = document.createElement("button");
+      btn.className = "option-btn";
+      btn.textContent = opt;
+      btn.onclick = () => submitAnswer(opt);
+      optionsContainer.appendChild(btn);
+    });
+  }
+
+  function submitAnswer(answer) {
+    if (currentlyAnswering) return;
+    currentlyAnswering = true;
+    
+    // Disable all buttons
+    Array.from(optionsContainer.querySelectorAll("button")).forEach(b => b.disabled = true);
+    
+    ws.send(JSON.stringify({ type: "answer", answer: answer }));
+  }
+
+  function showLobby() {
+    gameScreen.classList.add("hidden");
+    gameScreen.setAttribute("aria-hidden", "true");
+    lobbySection.classList.remove("hidden");
+    lobbySection.setAttribute("aria-hidden", "false");
+    
+    // Reset ready button
+    isReady = false;
+    readyBtn.classList.remove("active");
+    readyBtn.disabled = false;
+    readyBtn.textContent = "I'm Ready!";
+  }
+
+  /* ------------------ WebSocket Handlers ------------------ */
+  ws.onopen = () => {
+    logSystem(`✅ Connected as ${username}`);
+    console.log("WebSocket connected");
+  };
+
+  ws.onmessage = (ev) => {
+    let data;
+    try {
+      data = JSON.parse(ev.data);
+    } catch (e) {
+      logSystem(String(ev.data));
+      return;
+    }
+    
+    console.log("Received:", data);
+
+    switch (data.type) {
+      case "lobby":
+        updatePlayers(data.players || []);
+        break;
+
+      case "ready_update":
+        const readyList = data.ready_players || [];
+        if (readyList.length > 0) {
+          logSystem(`Ready: ${readyList.join(", ")}`);
+        }
+        if (data.players) updatePlayers(data.players);
+        break;
+
+      case "game_starting":
+        logSystem("🎮 " + (data.message || "Game starting!"));
+        break;
+
+      case "new_question":
+        showQuestion(
+          data.question,
+          data.options || [],
+          data.round || 1,
+          data.total_rounds || 10
+        );
+        break;
+
+      case "answer_result":
+        if (data.username === username) {
+          if (data.correct) {
+            logSystem(" Correct! +1 point");
+          } else {
+            logSystem((data.message || "Incorrect"));
+          }
+        } else if (data.username && data.correct) {
+          logSystem(`${data.username} got it right!`);
+        }
+        
+        if (data.correct_answer) {
+          logSystem(`Answer: ${data.correct_answer}`);
+        }
+        
+        if (data.scores) updateScores(data.scores);
+        break;
+
+      case "chat_message":
+        addChatBubble(data.sender, data.message);
+        break;
+
+      case "user_left":
+        logSystem(` ${data.username} left the game`);
+        if (data.players) updatePlayers(data.players);
+        break;
+
+      case "game_over":
+        logSystem((data.message || "Game over!"));
+        if (data.scores) updateScores(data.scores);
+        setTimeout(showLobby, 2000);
+        break;
+
+      case "return_to_lobby":
+        showLobby();
+        logSystem((data.message || "Back to lobby"));
+        break;
+
+      case "score_update":
+        if (data.scores) updateScores(data.scores);
+        break;
+
+      case "info":
+        if (data.message) logSystem(data.message);
+        break;
+
+      default:
+        console.log("Unhandled message type:", data.type);
+        break;
+    }
+  };
+
+  ws.onclose = () => {
+    logSystem("Disconnected from server");
+    readyBtn.disabled = true;
+    chatInput.disabled = true;
+  };
+
+  ws.onerror = (err) => {
+    console.error("WebSocket error:", err);
+    logSystem(" Connection error");
+  };
+
+  /* ------------------ UI Event Handlers ------------------ */
+  readyBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (isReady) return;
+    
+    isReady = true;
+    ws.send(JSON.stringify({ type: "ready" }));
+    readyBtn.classList.add("active");
+    readyBtn.disabled = true;
+    readyBtn.textContent = " Ready";
+    logSystem("Waiting for other players...");
+  });
+
+  chatForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = chatInput.value.trim();
+    if (!text) return;
+    
+    ws.send(JSON.stringify({ type: "chat_message", message: text }));
+    chatInput.value = "";
+  });
+
+  // Auto-focus chat input
+  chatInput.focus();
+}
+</script>
 
 {% endblock %}

@@ -7,11 +7,11 @@ class Card(SQLModel, table=True):
     set_ID: int = Field(foreign_key="set.id")
     set: "Set" = Relationship(back_populates="cards")
 
-class User(BaseModel):
-    id: int
+class User(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
     name: str
     email: str
-    sets: list[int] = []
+    password: str
 
 class Set(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
